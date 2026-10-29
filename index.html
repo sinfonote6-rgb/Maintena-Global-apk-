@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maintena – Factory Maintenance</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f4f2ec;--sf:#fff;--ink:#1d2a24;--mu:#6b766f;--ln:#dedbd0;--ac:#1f6f50;--ai:#fff;--wa:#c47a10;--bd:#b3392e;--ok:#1f6f50}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a17;--sf:#1e2622;--ink:#eaefe9;--mu:#98a59c;--ln:#2d3832;--ac:#4cc38a;--ai:#0b1a12;--wa:#e0a040;--bd:#e8776c;--ok:#4cc38a}}
+:root[data-theme="dark"]{--bg:#141a17;--sf:#1e2622;--ink:#eaefe9;--mu:#98a59c;--ln:#2d3832;--ac:#4cc38a;--ai:#0b1a12;--wa:#e0a040;--bd:#e8776c;--ok:#4cc38a}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,system-ui,-apple-system,Roboto,sans-serif;font-size:15px;line-height:1.4}
+.app{max-width:720px;margin:0 auto;padding:0 16px 100px}
+header{padding:16px 0 4px}
+h1{font-size:21px;margin:0}h2{font-size:18px;margin:14px 0 4px}
+.sub{color:var(--mu);font-size:13px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav div{display:flex;max-width:720px;margin:0 auto}
+.nav button{flex:1;border:0;background:none;color:var(--mu);padding:9px 0 11px;font-size:11px;font-family:inherit;cursor:pointer}
+.nav button b{display:block;font-size:19px;font-weight:400}.nav button.on{color:var(--ac);font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.stat,.card,.item{background:var(--sf);border:1px solid var(--ln);border-radius:14px}
+.stat{padding:12px}.stat .n{font-size:26px;font-weight:700}.stat .l{color:var(--mu);font-size:12px}
+.card{padding:14px;margin:10px 0}.card h3{margin:0 0 8px;font-size:15px}
+.item{padding:12px 14px;margin:10px 0}.tap{cursor:pointer}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.t{font-weight:600}
+.pill{font-size:12px;padding:2px 9px;border-radius:20px;border:1px solid currentColor;white-space:nowrap}
+.Over,.open{color:var(--bd)}.Soon{color:var(--wa)}.OK,.solved{color:var(--ok)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px}
+.chips button,.sm{border:1px solid var(--ln);background:var(--sf);color:var(--ink);border-radius:20px;padding:6px 13px;font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap}
+.chips button.on{background:var(--ac);color:var(--ai);border-color:var(--ac)}
+label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
+input,select,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);color:var(--ink);font:inherit}
+textarea{min-height:76px}
+.btn{width:100%;margin-top:14px;padding:13px;border:0;border-radius:12px;background:var(--ac);color:var(--ai);font:inherit;font-weight:700;cursor:pointer}
+.btn.alt{background:none;color:var(--ac);border:1px solid var(--ac);margin-top:8px}
+.btn.bad{background:none;color:var(--bd);border:1px solid var(--bd)}
+.link{border:0;background:none;color:var(--ac);font:inherit;padding:8px 0;cursor:pointer}
+a{color:var(--ac)}
+.qty{display:flex;align-items:center;gap:8px}.qty button{width:34px;height:34px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);color:var(--ink);font-size:18px;cursor:pointer}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ph{max-width:100%;max-height:240px;object-fit:cover;border-radius:10px;margin-top:8px;display:block}
+.bar{height:10px;border-radius:5px;background:var(--ac);min-width:3px}
+.br{display:grid;grid-template-columns:64px 1fr 84px;gap:8px;align-items:center;margin:6px 0;font-size:13px}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+.empty{color:var(--mu);text-align:center;padding:22px 0}
+.seg{display:flex;gap:8px;margin:10px 0}.seg button{flex:1}
+select.lang{width:auto;padding:5px 8px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<nav class="nav" id="nav"></nav>
+<div class="toast" id="toast"></div>
+<script>
+var D={
+home:["Home","الرئيسية","হোম"],machines:["Machines","الماكينات","মেশিন"],problems:["Problems","الأعطال","সমস্যা"],parts:["Spare parts","قطع الغيار","স্পেয়ার পার্টস"],costs:["Costs","التكاليف","খরচ"],team:["Team","الفنيون","টিম"],
+login:["Sign in","تسجيل الدخول","লগইন"],admin:["Admin","المدير","অ্যাডমিন"],tech:["Technician","فني","টেকনিশিয়ান"],email:["Email","البريد الإلكتروني","ইমেইল"],techId:["Technician ID (1-10)","رقم الفني (1-10)","টেকনিশিয়ান আইডি (১-১০)"],pass:["Password","كلمة المرور","পাসওয়ার্ড"],logout:["Log out","خروج","লগআউট"],bad:["Wrong ID or password","بيانات غير صحيحة","ভুল আইডি বা পাসওয়ার্ড"],
+demo:["Demo login. Admin: admin@maintena.demo / admin123. Technician: ID 1 / 1111.","دخول تجريبي. المدير: admin@maintena.demo / admin123. فني: رقم 1 / 1111.","ডেমো লগইন। অ্যাডমিন: admin@maintena.demo / admin123। টেকনিশিয়ান: আইডি 1 / 1111।"],
+add:["Add","إضافة","যোগ করুন"],save:["Save","حفظ","সংরক্ষণ"],del:["Delete","حذف","মুছুন"],back:["Back","رجوع","পিছনে"],saved:["Saved","تم الحفظ","সংরক্ষিত"],req:["Fill the required fields","أكمل الحقول المطلوبة","প্রয়োজনীয় ঘর পূরণ করুন"],none:["Nothing here yet","لا يوجد شيء بعد","এখনো কিছু নেই"],call:["Call","اتصال","কল"],
+name:["Name","الاسم","নাম"],mtype:["Machine name / type","اسم / نوع الماكينة","মেশিনের নাম / ধরন"],count:["How many?","كم العدد؟","কয়টি?"],details:["Machine details","تفاصيل الماكينة","মেশিনের বিবরণ"],loc:["Location","الموقع","অবস্থান"],svcType:["Service type","نوع الصيانة","সার্ভিসের ধরন"],evD:["Service every (days)","الصيانة كل (أيام)","সার্ভিস প্রতি (দিন)"],evH:["Service every (hours)","الصيانة كل (ساعات)","সার্ভিস প্রতি (ঘণ্টা)"],hrs:["Running hours now","ساعات التشغيل الآن","বর্তমান চলার ঘণ্টা"],last:["Last service date","تاريخ آخر صيانة","শেষ সার্ভিসের তারিখ"],next:["Next service","الصيانة القادمة","পরের সার্ভিস"],
+sug:["Suggested technician","الفني المقترح","প্রস্তাবিত টেকনিশিয়ান"],phone:["Phone","الهاتف","ফোন"],rec:["Record service","تسجيل صيانة","সার্ভিস লিখুন"],note:["Work done","العمل المنجز","কাজের বিবরণ"],cost:["Cost (SAR)","التكلفة (ريال)","খরচ (SAR)"],photo:["Photo","صورة","ছবি"],hist:["Service history","سجل الصيانة","সার্ভিসের ইতিহাস"],
+over:["Overdue","متأخر","মেয়াদ শেষ"],soon:["Due soon","قريب","শীঘ্রই"],ok:["OK","جيد","ঠিক আছে"],d:["d","يوم","দিন"],h:["h","ساعة","ঘণ্টা"],
+rep:["Report problem","إبلاغ عن عطل","সমস্যা জানান"],prob:["Problem details","تفاصيل العطل","সমস্যার বিবরণ"],sol:["Solution details","تفاصيل الحل","সমাধানের বিবরণ"],open:["Open","مفتوح","চলমান"],solved:["Solved","تم الحل","সমাধান হয়েছে"],addSol:["Add solution","إضافة الحل","সমাধান যোগ করুন"],by:["By","بواسطة","কর্তৃক"],mach:["Machine","الماكينة","মেশিন"],
+qty:["In stock","المخزون","স্টক"],min:["Minimum","الحد الأدنى","সর্বনিম্ন"],shop:["Suggested shop name","اسم المحل المقترح","প্রস্তাবিত দোকানের নাম"],low:["Low stock","مخزون منخفض","স্টক কম"],partName:["Part name","اسم القطعة","পার্টসের নাম"],forT:["Used for (machine type)","تستخدم لـ (نوع الماكينة)","কোন মেশিনের জন্য"],
+buy:["Record purchase","تسجيل شراء","ক্রয় লিখুন"],bill:["Bill (camera photo or PDF)","الفاتورة (صورة أو PDF)","বিল (ছবি বা PDF)"],bdate:["Buying date","تاريخ الشراء","ক্রয়ের তারিখ"],buys:["Previous purchases","المشتريات السابقة","আগের ক্রয়"],pdfNo:["PDF upload needs the live app. Use a photo for now.","رفع PDF يحتاج التطبيق الفعلي. استخدم صورة الآن.","PDF আপলোডের জন্য আসল অ্যাপ লাগবে। এখন ছবি দিন।"],
+month:["Monthly","شهري","মাসিক"],year:["Yearly","سنوي","বার্ষিক"],total:["Total","الإجمالي","মোট"],thisM:["This month","هذا الشهر","এই মাস"],thisY:["This year","هذه السنة","এই বছর"],
+cs:["Service","الصيانة","সার্ভিস"],cp:["Spare parts","قطع الغيار","স্পেয়ার পার্টস"],cr:["Repairs","الإصلاحات","মেরামত"],cm:["Service and repair cost by machine","تكلفة الصيانة حسب الماكينة","মেশিন অনুযায়ী খরচ"],
+jobs:["Jobs done","أعمال منجزة","সম্পন্ন কাজ"],addT:["Add technician","إضافة فني","টেকনিশিয়ান যোগ করুন"],maxT:["Maximum 10 technicians in one account.","الحد الأقصى 10 فنيين في الحساب.","একটি অ্যাকাউন্টে সর্বোচ্চ ১০ জন।"],tid:["ID","الرقم","আইডি"],
+needs:["Needs service","تحتاج صيانة","সার্ভিস দরকার"],openP:["Open problems","أعطال مفتوحة","চলমান সমস্যা"],lowP:["Low-stock parts","قطع منخفضة","কম স্টকের পার্টস"],mc:["Machines","الماكينات","মেশিন"],all:["All","الكل","সব"]};
+var lang="en";try{lang=localStorage.getItem("ff_lang")||"en"}catch(e){}
+var LI={en:0,ar:1,bn:2};
+function T(k){return (D[k]||[k,k,k])[LI[lang]]}
+function ds(n){var d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+var today=ds(0);
+function nowS(){var d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,16).replace("T"," ")}
+function addTo(d,n){var x=new Date(d);x.setDate(x.getDate()+Number(n));return x.toISOString().slice(0,10)}
+function seed(){
+var s={admin:{email:"admin@maintena.demo",pass:"admin123",name:"Admin"},techs:[{id:1,name:"Rahim",phone:"+966500000001",pass:"1111"},{id:2,name:"Karim",phone:"+966500000002",pass:"2222"},{id:3,name:"Sabbir",phone:"+966500000003",pass:"3333"}],machines:[],parts:[],problems:[],services:[],purchases:[],n:1};
+function add(type,cnt,iv,loc,offs,sh,st,sn,sp){for(var i=1;i<=cnt;i++){var hr=sh?2400+i*100:0;s.machines.push({id:s.n++,name:type+" "+i,type:type,loc:loc,details:"",svcType:st,iv:iv,last:ds(-offs[(i-1)%offs.length]),hrs:hr,sh:sh,lh:sh?hr-[2050,900,400,1700,200][i-1]:0,sn:sn,sp:sp})}}
+add("Air Compressor",5,90,"Compressor room",[95,60,30,85,10],2000,"Oil and filter change","Ali Air Services","+966500111222");
+add("Packing Machine",2,30,"Packing hall",[33,12],0,"Belt and heater check","Packtech Support","+966500333444");
+add("Generator",1,180,"Power house",[100],0,"Full service","Gulf Power Service","+966500555666");
+[["Compressor oil filter","Air Compressor",8,4,"Al Ahsa Auto Parts","+966500777001","Main street"],["Air seal kit","Air Compressor",3,2,"Gulf Industrial Supply","+966500777002","Industrial area"],["Packing belt","Packing Machine",2,3,"Packtech Store","+966500777003","Industrial area"],["Heater element","Packing Machine",6,2,"Gulf Industrial Supply","+966500777002","Industrial area"],["Bearing 6205","General",10,4,"Al Ahsa Auto Parts","+966500777001","Main street"]].forEach(function(p){s.parts.push({id:s.n++,name:p[0],type:p[1],qty:p[2],min:p[3],shop:p[4],sp:p[5],loc:p[6]})});
+[5,35,70,110,150,200,260,320].forEach(function(o,i){var p=s.parts[i%5];s.purchases.push({id:s.n++,pid:p.id,date:ds(-o),qty:2,cost:90+i*25,shop:p.shop,sp:p.sp,bill:""})});
+[[1,-60,320],[2,-30,150],[6,-12,210],[8,-100,400],[3,-85,180],[7,-33,120]].forEach(function(x){s.services.push({id:s.n++,mid:x[0],date:ds(x[1])+" 10:00",tech:"Rahim",note:"Routine service",cost:x[2],photo:""})});
+s.problems.push({id:s.n++,mid:2,date:ds(-20)+" 09:30",text:"Low air pressure",photo:"",by:"Rahim",status:"solved",sol:"Replaced air seal kit",solPhoto:"",solDate:ds(-19)+" 14:10",solBy:"Karim",cost:180});
+s.problems.push({id:s.n++,mid:6,date:ds(-1)+" 16:45",text:"Belt slipping on packing line",photo:"",by:"Karim",status:"open"});
+return s}
+var S=seed(),me=null,sdoc=null,assets=null,tab="home",openM=null,openP=null,openPt=null,form=null,fil="All",yr=today.slice(0,4),lmode="admin",pm=null;
+try{var x0=localStorage.getItem("ff4");if(x0)S=JSON.parse(x0)}catch(e){}
+try{var m0=sessionStorage.getItem("ff_me");if(m0)me=JSON.parse(m0)}catch(e){}
+function save(){try{localStorage.setItem("ff4",JSON.stringify(S))}catch(e){}if(sdoc)sdoc.set(S).catch(function(){sync("Could not sync · saved on this device")})}
+function sync(t){var e=document.getElementById("sync");if(e)e.textContent=t}
+function E(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2000)}
+function v(id){return document.getElementById(id).value}
+function fld(id,l,val,type,ph){return '<label>'+l+'</label><input id="'+id+'" type="'+(type||"text")+'"'+(type==="number"?' inputmode="decimal"':'')+' value="'+E(val==null?"":val)+'" placeholder="'+E(ph||"")+'">'}
+function area(id,l){return '<label>'+l+'</label><textarea id="'+id+'"></textarea>'}
+function sel(id,l,o){return '<label>'+l+'</label><select id="'+id+'">'+o.map(function(x){return '<option value="'+E(x[0])+'">'+E(x[1])+'</option>'}).join("")+'</select>'}
+function file(id,l){return '<label>'+l+'</label><input id="'+id+'" type="file" accept="image/*,application/pdf">'}
+function att(u){return u?'<img class="ph" src="'+E(u)+'" alt="" onerror="this.outerHTML=\'<a href=&quot;\'+this.src+\'&quot; target=_blank>PDF / file</a>\'">':''}
+function tel(n){return n?'<a href="tel:'+E(n)+'">'+T("call")+' '+E(n)+'</a>':''}
+function money(n){return Math.round(n).toLocaleString()+" SAR"}
+function mById(i){return S.machines.filter(function(m){return m.id===i})[0]}
+function mName(i){var m=mById(i);return m?m.name:"—"}
+function hl(m){return m.sh>0?m.sh-(m.hrs-m.lh):null}
+function left(m){return Math.round((new Date(addTo(m.last,m.iv))-new Date(today))/864e5)}
+function st(m){var l=left(m),h=hl(m);if(l<0)return["Over",T("over")+" "+(-l)+" "+T("d")];if(h!==null&&h<0)return["Over",T("over")+" "+(-h)+" "+T("h")];if(l<=7)return["Soon",T("soon")+" "+l+" "+T("d")];if(h!==null&&h<=50)return["Soon",T("soon")+" "+h+" "+T("h")];return["OK",T("ok")+" · "+l+" "+T("d")]}
+async function up(id){var el=document.getElementById(id),f=el&&el.files&&el.files[0];if(!f)return"";
+if(assets){try{return (await assets.upload(f)).url}catch(e){}}
+if(f.type.indexOf("image/")===0)return await new Promise(function(r){var i=new Image;i.onload=function(){var k=Math.min(1,600/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*k;c.height=i.height*k;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.55))};i.onerror=function(){r("")};i.src=URL.createObjectURL(f)});
+toast(T("pdfNo"));return""}
+function recs(){var r=[];S.services.forEach(function(x){r.push({d:x.date.slice(0,10),c:+x.cost||0,k:"cs",m:x.mid})});S.purchases.forEach(function(x){r.push({d:x.date,c:+x.cost||0,k:"cp",m:0})});S.problems.forEach(function(p){if(p.status==="solved")r.push({d:p.solDate.slice(0,10),c:+p.cost||0,k:"cr",m:p.mid})});return r}
+function isAdmin(){return me&&me.role==="admin"}
+
+/* ---------- login ---------- */
+function langSel(){return '<select class="lang" onchange="setLang(this.value)"><option value="en"'+(lang==="en"?" selected":"")+'>English</option><option value="ar"'+(lang==="ar"?" selected":"")+'>العربية</option><option value="bn"'+(lang==="bn"?" selected":"")+'>বাংলা</option></select>'}
+function setLang(l){lang=l;try{localStorage.setItem("ff_lang",l)}catch(e){}render()}
+function loginView(){return '<header><div class="row"><h1>Maintena</h1>'+langSel()+'</div></header><div class="card"><div class="seg"><button class="sm" style="'+(lmode==="admin"?"background:var(--ac);color:var(--ai)":"")+'" onclick="lmode=\'admin\';render()">'+T("admin")+'</button><button class="sm" style="'+(lmode==="tech"?"background:var(--ac);color:var(--ai)":"")+'" onclick="lmode=\'tech\';render()">'+T("tech")+'</button></div>'+
+(lmode==="admin"?fld("l_u",T("email"),"","email"):fld("l_u",T("techId"),"","number"))+fld("l_p",T("pass"),"","password")+'<button class="btn" onclick="doLogin()">'+T("login")+'</button></div><div class="sub">'+T("demo")+'</div>'}
+function doLogin(){var u=v("l_u").trim().toLowerCase(),p=v("l_p"),r=null;
+if(lmode==="admin"){if(u===S.admin.email.toLowerCase()&&p===S.admin.pass)r={role:"admin",name:S.admin.name}}
+else{var t=S.techs.filter(function(t){return String(t.id)===u&&t.pass===p})[0];if(t)r={role:"tech",id:t.id,name:t.name}}
+if(!r){toast(T("bad"));return}me=r;try{sessionStorage.setItem("ff_me",JSON.stringify(r))}catch(e){}tab="home";render()}
+function logout(){me=null;try{sessionStorage.removeItem("ff_me")}catch(e){}openM=openP=openPt=form=null;render()}
+
+/* ---------- home ---------- */
+function mItem(m){var s=st(m);return '<div class="item tap" onclick="tab=\'machines\';openM='+m.id+';form=null;render()"><div class="row"><span class="t">'+E(m.name)+'</span><span class="pill '+s[0]+'">'+s[1]+'</span></div><div class="sub">'+E(m.loc)+' · '+E(m.svcType)+(m.sh>0?' · '+m.hrs+' h':'')+'</div></div>'}
+function home(){var att2=S.machines.filter(function(m){return st(m)[0]!=="OK"}).sort(function(a,b){return left(a)-left(b)}),op=S.problems.filter(function(p){return p.status==="open"}),lp=S.parts.filter(function(p){return p.qty<=p.min});
+var rs=recs(),mo=today.slice(0,7),mc=0,yc=0;rs.forEach(function(r){if(r.d.slice(0,7)===mo)mc+=r.c;if(r.d.slice(0,4)===today.slice(0,4))yc+=r.c});
+return '<div class="grid"><div class="stat"><div class="n">'+S.machines.length+'</div><div class="l">'+T("mc")+'</div></div><div class="stat"><div class="n Over">'+op.length+'</div><div class="l">'+T("openP")+'</div></div><div class="stat"><div class="n Soon">'+att2.length+'</div><div class="l">'+T("needs")+'</div></div><div class="stat"><div class="n '+(lp.length?"Over":"OK")+'">'+lp.length+'</div><div class="l">'+T("lowP")+'</div></div>'+
+(isAdmin()?'<div class="stat"><div class="n" style="font-size:20px">'+money(mc)+'</div><div class="l">'+T("thisM")+'</div></div><div class="stat"><div class="n" style="font-size:20px">'+money(yc)+'</div><div class="l">'+T("thisY")+'</div></div>':'')+'</div>'+
+'<h2>'+T("needs")+'</h2>'+(att2.length?att2.map(mItem).join(""):'<div class="empty">'+T("none")+'</div>')+
+'<h2>'+T("openP")+'</h2>'+(op.length?op.map(pItem).join(""):'<div class="empty">'+T("none")+'</div>')}
+
+/* ---------- machines ---------- */
+function machines(){
+if(openM!==null)return mDetail();
+if(form==="addM")return addMForm();
+var ty=["All"].concat(S.machines.map(function(m){return m.type}).filter(function(t,i,a){return a.indexOf(t)===i}));
+var sh=S.machines.filter(function(m){return fil==="All"||m.type===fil}).sort(function(a,b){return left(a)-left(b)});
+return '<div class="row"><h2>'+T("machines")+'</h2>'+(isAdmin()?'<button class="link" onclick="form=\'addM\';render()">＋ '+T("add")+'</button>':'')+'</div><div class="chips">'+ty.map(function(t){return '<button class="'+(fil===t?"on":"")+'" onclick="fil=this.dataset.t;render()" data-t="'+E(t)+'">'+(t==="All"?T("all"):E(t))+'</button>'}).join("")+'</div>'+(sh.length?sh.map(mItem).join(""):'<div class="empty">'+T("none")+'</div>')}
+function addMForm(){return '<button class="link" onclick="form=null;render()">‹ '+T("back")+'</button><h2>'+T("add")+' · '+T("machines")+'</h2>'+fld("a_t",T("mtype"),"","text","Air Compressor")+fld("a_n",T("count"),1,"number")+area("a_d",T("details"))+fld("a_l",T("loc"))+fld("a_s",T("svcType"))+'<div class="two"><div>'+fld("a_iv",T("evD"),90,"number")+'</div><div>'+fld("a_sh",T("evH"),0,"number")+'</div></div>'+fld("a_h",T("hrs"),0,"number")+fld("a_ld",T("last"),today,"date")+fld("a_sn",T("sug")+" · "+T("name"))+fld("a_sp",T("sug")+" · "+T("phone"),"","tel")+'<button class="btn" onclick="addM()">'+T("save")+'</button>'}
+function addM(){var t=v("a_t").trim(),n=Math.min(Math.max(+v("a_n")||1,1),50),iv=+v("a_iv");if(!t||!(iv>=1)){toast(T("req"));return}
+var ex=S.machines.filter(function(m){return m.type===t}).length,h=+v("a_h")||0;
+for(var i=1;i<=n;i++)S.machines.push({id:S.n++,name:n>1||ex?t+" "+(ex+i):t,type:t,loc:v("a_l"),details:v("a_d"),svcType:v("a_s")||"Service",iv:iv,last:v("a_ld")||today,hrs:h,sh:+v("a_sh")||0,lh:h,sn:v("a_sn"),sp:v("a_sp")});
+save();form=null;toast(T("saved"));render()}
+function mDetail(){var m=mById(openM);if(!m){openM=null;return machines()}
+var s=st(m),hs=S.services.filter(function(x){return x.mid===m.id}).sort(function(a,b){return a.date<b.date?1:-1}),ps=S.problems.filter(function(p){return p.mid===m.id}).sort(function(a,b){return a.date<b.date?1:-1});
+return '<button class="link" onclick="openM=null;form=null;render()">‹ '+T("back")+'</button><div class="card"><div class="row"><h3 style="margin:0">'+E(m.name)+'</h3><span class="pill '+s[0]+'">'+s[1]+'</span></div><p class="sub">'+E(m.type)+' · '+E(m.loc)+'</p>'+(m.details?'<p>'+E(m.details)+'</p>':'')+
+'<p>'+T("svcType")+': <b>'+E(m.svcType)+'</b><br>'+T("last")+': <b>'+m.last+'</b><br>'+T("next")+': <b>'+addTo(m.last,m.iv)+'</b> ('+T("evD")+': '+m.iv+')'+(m.sh>0?'<br>'+T("evH")+': <b>'+m.sh+'</b> · '+hl(m)+' '+T("h"):'')+'</p>'+
+'<p>'+T("sug")+': <b>'+E(m.sn||"—")+'</b><br>'+tel(m.sp)+'</p>'+fld("h_"+m.id,T("hrs"),m.hrs,"number")+'<button class="btn alt" onclick="setHrs('+m.id+')">'+T("save")+'</button></div>'+
+(form==="svc"?'<div class="card"><h3>'+T("rec")+'</h3><div class="sub">'+T("by")+': '+E(me.name)+'</div>'+area("s_n",T("note"))+fld("s_c",T("cost"),"","number")+file("s_f",T("photo"))+'<button class="btn" onclick="doSvc('+m.id+')">'+T("save")+'</button><button class="btn alt" onclick="form=null;render()">‹ '+T("back")+'</button></div>':'<div class="two"><button class="btn" onclick="form=\'svc\';render()">'+T("rec")+'</button><button class="btn alt" style="margin-top:14px" onclick="pm='+m.id+';tab=\'problems\';openM=null;form=\'addP\';render()">'+T("rep")+'</button></div>')+
+'<h2>'+T("hist")+'</h2>'+(hs.length?hs.map(function(x){return '<div class="item"><div class="row"><span class="t">'+x.date+'</span><span class="sub">'+E(x.tech)+(isAdmin()?' · '+money(x.cost||0):'')+'</span></div><div class="sub">'+E(x.note)+'</div>'+att(x.photo)+'</div>'}).join(""):'<div class="empty">'+T("none")+'</div>')+
+'<h2>'+T("problems")+'</h2>'+(ps.length?ps.map(pItem).join(""):'<div class="empty">'+T("none")+'</div>')+(isAdmin()?'<button class="btn bad" onclick="delM('+m.id+')">'+T("del")+'</button>':'')}
+function setHrs(id){var n=+v("h_"+id);if(!(n>=0)){toast(T("req"));return}mById(id).hrs=n;save();toast(T("saved"));render()}
+async function doSvc(id){var m=mById(id),p=await up("s_f");S.services.push({id:S.n++,mid:id,date:nowS(),tech:me.name,note:v("s_n")||"Service",cost:+v("s_c")||0,photo:p});m.last=today;m.lh=m.hrs;form=null;save();toast(T("saved"));render()}
+function delM(id){S.machines=S.machines.filter(function(m){return m.id!==id});openM=null;save();render()}
+
+/* ---------- problems ---------- */
+function pItem(p){return '<div class="item tap" onclick="tab=\'problems\';openM=null;openP='+p.id+';form=null;render()"><div class="row"><span class="t">'+E(mName(p.mid))+'</span><span class="pill '+p.status+'">'+T(p.status)+'</span></div><div class="sub">'+E(p.text)+'</div><div class="sub">'+p.date+' · '+E(p.by)+'</div></div>'}
+function problems(){
+if(openP!==null)return pDetail();
+if(form==="addP")return '<button class="link" onclick="form=null;pm=null;render()">‹ '+T("back")+'</button><h2>'+T("rep")+'</h2>'+sel("p_m",T("mach"),S.machines.map(function(m){return[m.id,m.name]}))+area("p_t",T("prob"))+file("p_f",T("photo"))+'<button class="btn" onclick="addP()">'+T("save")+'</button>'+(pm?'<script>document.getElementById("p_m").value="'+pm+'"<\/script>':'');
+var l=S.problems.slice().sort(function(a,b){return a.date<b.date?1:-1});
+return '<div class="row"><h2>'+T("problems")+'</h2><button class="link" onclick="form=\'addP\';render()">＋ '+T("rep")+'</button></div>'+(l.length?l.map(pItem).join(""):'<div class="empty">'+T("none")+'</div>')}
+async function addP(){if(!v("p_t").trim()){toast(T("req"));return}var f=await up("p_f");S.problems.push({id:S.n++,mid:+v("p_m"),date:nowS(),text:v("p_t"),photo:f,by:me.name,status:"open"});form=null;pm=null;save();toast(T("saved"));render()}
+function pDetail(){var p=S.problems.filter(function(x){return x.id===openP})[0];if(!p){openP=null;return problems()}var m=mById(p.mid);
+return '<button class="link" onclick="openP=null;form=null;render()">‹ '+T("back")+'</button><div class="card"><div class="row"><h3 style="margin:0">'+E(mName(p.mid))+'</h3><span class="pill '+p.status+'">'+T(p.status)+'</span></div><p class="sub">'+p.date+' · '+T("by")+' '+E(p.by)+'</p><p>'+E(p.text)+'</p>'+att(p.photo)+'</div>'+
+(p.status==="solved"?'<div class="card"><h3>'+T("sol")+'</h3><p class="sub">'+p.solDate+' · '+T("by")+' '+E(p.solBy)+(isAdmin()?' · '+money(p.cost||0):'')+'</p><p>'+E(p.sol)+'</p>'+att(p.solPhoto)+'</div>':
+(m&&m.sn?'<div class="card"><h3>'+T("sug")+'</h3><b>'+E(m.sn)+'</b><br>'+tel(m.sp)+'</div>':'')+(form==="sol"?'<div class="card"><h3>'+T("addSol")+'</h3>'+area("o_t",T("sol"))+fld("o_c",T("cost"),"","number")+file("o_f",T("photo"))+'<button class="btn" onclick="addSol('+p.id+')">'+T("save")+'</button></div>':'<button class="btn" onclick="form=\'sol\';render()">'+T("addSol")+'</button>'))}
+async function addSol(id){if(!v("o_t").trim()){toast(T("req"));return}var f=await up("o_f"),p=S.problems.filter(function(x){return x.id===id})[0];p.status="solved";p.sol=v("o_t");p.solPhoto=f;p.cost=+v("o_c")||0;p.solDate=nowS();p.solBy=me.name;form=null;save();toast(T("saved"));render()}
+
+/* ---------- parts ---------- */
+function parts(){
+if(openPt!==null)return ptDetail();
+if(form==="addPt")return '<button class="link" onclick="form=null;render()">‹ '+T("back")+'</button><h2>'+T("add")+' · '+T("parts")+'</h2>'+fld("t_n",T("partName"))+fld("t_t",T("forT"),"","text","Air Compressor")+'<div class="two"><div>'+fld("t_q",T("qty"),0,"number")+'</div><div>'+fld("t_m",T("min"),2,"number")+'</div></div>'+fld("t_s",T("shop"))+fld("t_p",T("phone"),"","tel")+fld("t_l",T("loc"))+'<button class="btn" onclick="addPt()">'+T("save")+'</button>';
+var l=S.parts.slice().sort(function(a,b){return (b.qty<=b.min)-(a.qty<=a.min)});
+return '<div class="row"><h2>'+T("parts")+'</h2>'+(isAdmin()?'<button class="link" onclick="form=\'addPt\';render()">＋ '+T("add")+'</button>':'')+'</div>'+l.map(function(p){return '<div class="item"><div class="row"><div class="tap" style="flex:1" onclick="openPt='+p.id+';form=null;render()"><div class="t">'+E(p.name)+'</div><div class="sub">'+E(p.type)+' · '+E(p.shop||"—")+'</div>'+(p.qty<=p.min?'<span class="pill Over">'+T("low")+'</span>':'')+'</div><div class="qty"><button onclick="adj('+p.id+',-1)">−</button><b>'+p.qty+'</b><button onclick="adj('+p.id+',1)">＋</button></div></div></div>'}).join("")}
+function pById(i){return S.parts.filter(function(p){return p.id===i})[0]}
+function adj(id,d){var p=pById(id);p.qty=Math.max(0,p.qty+d);save();render()}
+function addPt(){if(!v("t_n").trim()){toast(T("req"));return}S.parts.push({id:S.n++,name:v("t_n"),type:v("t_t")||"General",qty:+v("t_q")||0,min:+v("t_m")||0,shop:v("t_s"),sp:v("t_p"),loc:v("t_l")});form=null;save();toast(T("saved"));render()}
+function ptDetail(){var p=pById(openPt);if(!p){openPt=null;return parts()}var bs=S.purchases.filter(function(b){return b.pid===p.id}).sort(function(a,b){return a.date<b.date?1:-1});
+return '<button class="link" onclick="openPt=null;form=null;render()">‹ '+T("back")+'</button><div class="card"><div class="row"><h3 style="margin:0">'+E(p.name)+'</h3><b>'+p.qty+'</b></div><p class="sub">'+E(p.type)+' · '+T("min")+' '+p.min+'</p><p>'+T("shop")+': <b>'+E(p.shop||"—")+'</b><br>'+T("loc")+': '+E(p.loc||"—")+'<br>'+tel(p.sp)+'</p></div>'+
+(isAdmin()?(form==="buy"?'<div class="card"><h3>'+T("buy")+'</h3><div class="two"><div>'+fld("b_q",T("qty"),1,"number")+'</div><div>'+fld("b_c",T("cost"),"","number")+'</div></div>'+fld("b_d",T("bdate"),today,"date")+fld("b_s",T("shop"),p.shop)+fld("b_p",T("phone"),p.sp,"tel")+file("b_f",T("bill"))+'<button class="btn" onclick="buy('+p.id+')">'+T("save")+'</button></div>':'<button class="btn" onclick="form=\'buy\';render()">'+T("buy")+'</button>'):'')+
+'<h2>'+T("buys")+'</h2>'+(bs.length?bs.map(function(b){return '<div class="item"><div class="row"><span class="t">'+b.date+'</span><span>'+(isAdmin()?money(b.cost):'')+'</span></div><div class="sub">'+T("qty")+' +'+b.qty+' · '+E(b.shop||"")+'</div>'+att(b.bill)+'</div>'}).join(""):'<div class="empty">'+T("none")+'</div>')}
+async function buy(id){var p=pById(id),q=+v("b_q")||0;if(q<1){toast(T("req"));return}var f=await up("b_f");S.purchases.push({id:S.n++,pid:id,date:v("b_d")||today,qty:q,cost:+v("b_c")||0,shop:v("b_s"),sp:v("b_p"),bill:f});p.qty+=q;if(v("b_s")){p.shop=v("b_s");p.sp=v("b_p")}form=null;save();toast(T("saved"));render()}
+
+/* ---------- costs ---------- */
+function costs(){var rs=recs(),ys=[today.slice(0,4)];rs.forEach(function(r){var y=r.d.slice(0,4);if(ys.indexOf(y)<0)ys.push(y)});ys.sort().reverse();
+var yt={},mo=[],k={cs:0,cp:0,cr:0},bm={};for(var i=0;i<12;i++)mo.push(0);
+rs.forEach(function(r){var y=r.d.slice(0,4);yt[y]=(yt[y]||0)+r.c;if(y===yr){mo[+r.d.slice(5,7)-1]+=r.c;k[r.k]+=r.c;if(r.m)bm[r.m]=(bm[r.m]||0)+r.c}});
+var mx=Math.max.apply(null,mo.concat([1])),tot=mo.reduce(function(a,b){return a+b},0),ids=Object.keys(bm).sort(function(a,b){return bm[b]-bm[a]}).slice(0,6),bx=Math.max.apply(null,ids.map(function(i){return bm[i]}).concat([1])),M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+return '<h2>'+T("costs")+'</h2><div class="chips">'+ys.map(function(y){return '<button class="'+(yr===y?"on":"")+'" onclick="yr=\''+y+'\';render()">'+y+'</button>'}).join("")+'</div><div class="stat"><div class="n" style="font-size:24px">'+money(tot)+'</div><div class="l">'+T("total")+' · '+yr+'</div></div>'+
+'<div class="card"><h3>'+T("month")+'</h3>'+mo.map(function(c,i){return '<div class="br"><span>'+M[i]+'</span><div class="bar" style="width:'+Math.round(c/mx*100)+'%"></div><span>'+money(c)+'</span></div>'}).join("")+'</div>'+
+'<div class="card"><h3>'+T("year")+'</h3>'+ys.map(function(y){return '<div class="row" style="margin:6px 0"><span>'+y+'</span><b>'+money(yt[y]||0)+'</b></div>'}).join("")+'</div>'+
+'<div class="card">'+["cs","cp","cr"].map(function(x){return '<div class="row" style="margin:6px 0"><span>'+T(x)+'</span><b>'+money(k[x])+'</b></div>'}).join("")+'</div>'+
+'<div class="card"><h3>'+T("cm")+'</h3>'+ids.map(function(i){return '<div class="br" style="grid-template-columns:96px 1fr 84px"><span>'+E(mName(+i))+'</span><div class="bar" style="width:'+Math.round(bm[i]/bx*100)+'%"></div><span>'+money(bm[i])+'</span></div>'}).join("")+'</div>'}
+
+/* ---------- team ---------- */
+function team(){
+if(form==="addT"){var used=S.techs.map(function(t){return t.id}),fr=[];for(var i=1;i<=10;i++)if(used.indexOf(i)<0)fr.push([i,String(i)]);
+return '<button class="link" onclick="form=null;render()">‹ '+T("back")+'</button><h2>'+T("addT")+'</h2>'+sel("n_i",T("tid"),fr)+fld("n_n",T("name"))+fld("n_p",T("phone"),"","tel")+fld("n_w",T("pass"),"","text")+'<button class="btn" onclick="addT()">'+T("save")+'</button>'}
+var jobs=function(n){return S.services.filter(function(x){return x.tech===n}).length+S.problems.filter(function(p){return p.solBy===n}).length};
+return '<div class="row"><h2>'+T("team")+'</h2>'+(isAdmin()&&S.techs.length<10?'<button class="link" onclick="form=\'addT\';render()">＋ '+T("addT")+'</button>':'')+'</div>'+(isAdmin()?'<div class="sub">'+T("maxT")+' ('+S.techs.length+'/10)</div><div class="card"><div class="t">'+T("admin")+'</div><div class="sub">'+E(S.admin.email)+'</div></div>':'')+
+S.techs.map(function(t){return '<div class="item"><div class="row"><span class="t">#'+t.id+' · '+E(t.name)+'</span><span class="sub">'+T("jobs")+': '+jobs(t.name)+'</span></div><div class="sub">'+tel(t.phone)+(isAdmin()?' · '+T("pass")+': '+E(t.pass):'')+'</div>'+(isAdmin()?'<button class="link" style="color:var(--bd)" onclick="delT('+t.id+')">'+T("del")+'</button>':'')+'</div>'}).join("")}
+function addT(){if(!v("n_n").trim()||!v("n_w")){toast(T("req"));return}S.techs.push({id:+v("n_i"),name:v("n_n"),phone:v("n_p"),pass:v("n_w")});S.techs.sort(function(a,b){return a.id-b.id});form=null;save();toast(T("saved"));render()}
+function delT(id){S.techs=S.techs.filter(function(t){return t.id!==id});save();render()}
+
+/* ---------- shell ---------- */
+function render(){
+document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+var app=document.getElementById("app"),nav=document.getElementById("nav");
+if(!me){app.innerHTML=loginView();nav.innerHTML="";return}
+var tabs=[["home","▦"],["machines","⚙"],["problems","⚠"],["parts","📦"]];if(isAdmin())tabs.push(["costs","💰"]);tabs.push(["team","👥"]);
+nav.innerHTML='<div>'+tabs.map(function(t){return '<button class="'+(tab===t[0]?"on":"")+'" onclick="tab=\''+t[0]+'\';openM=openP=openPt=null;form=null;render();window.scrollTo(0,0)"><b>'+t[1]+'</b>'+T(t[0])+'</button>'}).join("")+'</div>';
+var body=tab==="home"?home():tab==="machines"?machines():tab==="problems"?problems():tab==="parts"?parts():tab==="costs"&&isAdmin()?costs():team();
+app.innerHTML='<header><div class="row"><h1>Maintena</h1><div class="row">'+langSel()+'<button class="sm" onclick="logout()">'+T("logout")+'</button></div></div><div class="sub">'+E(me.name)+' · '+T(me.role)+(me.id?' #'+me.id:'')+' · <span id="sync">Offline demo · saved on this device only</span></div></header>'+body;
+if(sdoc)sync("Shared with your team · live sync");
+var sc=app.querySelectorAll("script");sc.forEach(function(x){(0,eval)(x.textContent)})}
+render();
+(async function(){
+if(!window.claude||!claude.use)return;
+try{assets=await claude.use("assets")}catch(e){}
+try{var db=await claude.use("db");if(db){sdoc=db.doc("maintena/full");sync("Shared with your team · live sync");sdoc.onSnapshot(function(sn){if(sn.metadata&&sn.metadata.hasPendingWrites)return;if(sn.exists){var d=sn.data();if(d&&d.machines){S=d;if(me&&!form)render()}}},function(){})}}catch(e){}
+})();
+</script>
+</body>
+</html>
